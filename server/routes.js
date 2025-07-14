@@ -236,7 +236,6 @@ function getRoutes(app) {
                 }));
                 res.json(topArtists);
             } else {
-                console.log("No se encontraron artistas más escuchados.");
                 res.status(404).send("No se encontraron artistas más escuchados.");
             }
         } catch (error) {

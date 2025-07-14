@@ -1,1 +1,13 @@
-server/.env
+node_modules/
+*.env
+__pycache__/
+*.py[cod]
+**/.DS_Store
+.vscode/
+*.log
+*.tmp
+*.swp
+package-lock.json
+config.txt
+delete-playlist.py
+__tests__/

@@ -5,15 +5,14 @@ Install with [npm](https://www.npmjs.com/):
 ```sh
 $ npm install
 ```
+Complete the [.env.sample](/server/.env.sample) file and delete .sample extension
+
 # Usage
 >Run app:
 ```sh
 $ npm start
 ```
->Run test:
-```sh
-$ npm test
-```
+
 ### Author
 
 Copyright © 2025, [Raimundo Vicuña](https://github.com/raideus138).

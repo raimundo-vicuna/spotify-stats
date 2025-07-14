@@ -138,7 +138,6 @@ function validateEmail(email) {
 }
 
 function sendFormData(data) {
-  console.log("Datos enviados al servidor:", data);
   sendAlert("Formulario enviado con éxito.", "green");
   form.reset();
 }

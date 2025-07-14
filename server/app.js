@@ -29,7 +29,6 @@ app.use(express.static(publicPath));
 app.get("/", (req, res) => {
 
   res.sendFile(path.join(publicPath, 'index.html'));
-  console.log(publicPath,"index.html")
 });
 app.use((req, res) => {
   res.status(404).sendFile(path.join(publicPath, '404.html'));
@@ -40,9 +39,9 @@ app.listen(port, () => {
 });
 
 process.on('exit', (code) => {
-  console.log(`El proceso está saliendo con el código: ${code}`);
+  return
 });
 
 process.on('uncaughtException', (err) => {
-  console.error('Error no capturado:', err);
+  console.error(err);
 });
