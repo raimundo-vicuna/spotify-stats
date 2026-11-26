@@ -37,3 +37,7 @@ The sign-in page and dashboard use a dark space-inspired theme with an animated 
 ## Tests
 
 Run `npm test` to execute the route authentication tests.
+
+
+### Music intelligence dashboard
+The dashboard now presents a visual listening snapshot with selectable 4-week, 6-month, and all-time charts; a featured top track; top-track and artist cards; average track duration and Spotify popularity indicators; artist-backed genre frequency bars; recent-play timeline; live playback progress; and a profile summary. Genre bars count appearances across the returned top-artist set and are not listening-time measurements. The time-range selector uses Spotify's `short_term`, `medium_term`, and `long_term` top-item ranges.
