@@ -94,7 +94,7 @@ function renderFeaturedTrack() {
   meta.append(node('span', 'data-chip', '↗ Open in Spotify'));
   copy.append(meta);
   target.append(cover, copy);
-  target.addEventListener('click', () => spotifyLink(track.external_urls?.spotify), { once: true });
+  target.onclick = () => spotifyLink(track.external_urls?.spotify);
   target.style.cursor = 'pointer';
 }
 
