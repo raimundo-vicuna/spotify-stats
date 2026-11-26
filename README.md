@@ -41,3 +41,14 @@ Run `npm test` to execute the route authentication tests.
 
 ### Music intelligence dashboard
 The dashboard now presents a visual listening snapshot with selectable 4-week, 6-month, and all-time charts; a featured top track; top-track and artist cards; average track duration and Spotify popularity indicators; artist-backed genre frequency bars; recent-play timeline; live playback progress; and a profile summary. Genre bars count appearances across the returned top-artist set and are not listening-time measurements. The time-range selector uses Spotify's `short_term`, `medium_term`, and `long_term` top-item ranges.
+
+
+## Importing your Spotify listening history
+
+Request your personal data export from Spotify and extract the downloaded archive. In the dashboard, choose one or more `Streaming_History_Audio_*.json` files. ZIP archives are not uploaded directly; extract them first.
+
+The import is parsed in the browser and summarized locally. It does not send the exported listening history to this server. A compact aggregate is stored in the browser's local storage so it can be restored on the next visit. Clear this site's browser data to remove that local summary.
+
+The Song Time Machine reports the sum of Spotify's recorded `ms_played` values and the number of listening events present in the export. An event is not necessarily a Spotify-qualified stream. Entries without track metadata are skipped. Monthly charts use the timestamps contained in the export.
+
+Use the share controls to generate a shareable PNG. Review the generated card before posting.
