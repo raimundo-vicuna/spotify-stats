@@ -3,6 +3,11 @@ const passport = require('passport');
 const cookieParser = require('cookie-parser');
 const { SPOTIFY_SCOPES } = require('./passport');
 const SPOTIFY_API = 'https://api.spotify.com/v1';
+const TIME_RANGES = new Set(['short_term', 'medium_term', 'long_term']);
+function requestedTimeRange(req) {
+  const range = req.query.range;
+  return TIME_RANGES.has(range) ? range : 'short_term';
+}
 
 function requireAuthentication(req, res, next) {
   if (typeof req.isAuthenticated === 'function' && req.isAuthenticated() && req.user) return next();
@@ -63,19 +68,19 @@ function getRoutes(app) {
   });
   app.get('/top-tracks', requireAuthentication, async (req, res) => {
     try {
-      const r = await spotifyRequest(req, 'get', '/me/top/tracks', { params: { time_range: 'short_term', limit: 10 } });
+      const r = await spotifyRequest(req, 'get', '/me/top/tracks', { params: { time_range: requestedTimeRange(req), limit: 10 } });
       return res.json(r.data.items || []);
     } catch (e) { return sendSpotifyError(res, e, 'Error al obtener las canciones más escuchadas.'); }
   });
   app.get('/top-artist', requireAuthentication, async (req, res) => {
     try {
-      const r = await spotifyRequest(req, 'get', '/me/top/artists', { params: { time_range: 'short_term', limit: 1 } });
+      const r = await spotifyRequest(req, 'get', '/me/top/artists', { params: { time_range: requestedTimeRange(req), limit: 1 } });
       return res.json(r.data);
     } catch (e) { return sendSpotifyError(res, e, 'Error al obtener el artista más escuchado.'); }
   });
   app.get('/top-artists', requireAuthentication, async (req, res) => {
     try {
-      const r = await spotifyRequest(req, 'get', '/me/top/artists', { params: { time_range: 'short_term', limit: 10 } });
+      const r = await spotifyRequest(req, 'get', '/me/top/artists', { params: { time_range: requestedTimeRange(req), limit: 10 } });
       return res.json((r.data.items || []).map(({ name, genres, images, href }) => ({ name, genres, images, href })));
     } catch (e) { return sendSpotifyError(res, e, 'Error al obtener los artistas más escuchados.'); }
   });
@@ -108,12 +113,12 @@ function getRoutes(app) {
   });
   app.get('/top-genres', requireAuthentication, async (req, res) => {
     try {
-      const r = await spotifyRequest(req, 'get', '/me/top/artists', { params: { limit: 10 } });
+      const r = await spotifyRequest(req, 'get', '/me/top/artists', { params: { time_range: requestedTimeRange(req), limit: 10 } });
       const counts = (r.data.items || []).flatMap((artist) => artist.genres || []).reduce((acc, genre) => {
         acc[genre] = (acc[genre] || 0) + 1; return acc;
       }, {});
       const genres = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10)
-        .map(([name]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() }));
+        .map(([name, count]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1).toLowerCase(), count }));
       return res.json(genres);
     } catch (e) { return sendSpotifyError(res, e, 'Error al obtener los géneros más escuchados.'); }
   });
