@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/popup.css">
   <link rel="stylesheet" href="css/cosmic.css">
+  <link rel="stylesheet" href="css/history-universe.css">
   <link rel="shortcut icon" href="assets/astronaut.svg" type="image/svg">
 </head>
 
@@ -28,62 +29,16 @@
     </div>
   </div>
   <div class="container-scroller">
-    <nav class="navbar fixed-top">
-      <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
-        <ul class="navbar-nav navbar-nav-right">
-          <li class="nav-item nav-item-settings dropdown d-flex mr-4 ">
-            <a class="nav-link count-indicator dropdown-toggle d-flex align-items-center justify-content-center"
-              id="notificationDropdown" href="#" data-toggle="dropdown">
-              <i class="bi bi-gear"></i>
-            </a>
-            <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list"
-              aria-labelledby="notificationDropdown">
-              <p class="mb-0 font-weight-normal float-left dropdown-header">Settings</p>
-              <a class="dropdown-item preview-item" href="./index.html#Contact">
-                <i class="bi bi-person-fill"></i> Contact
-              </a>
-              <a href="/logout" class="dropdown-item preview-item">
-                <i class="bi bi-box-arrow-left"></i> Logout
-              </a>
-            </div>
-          </li>
-        </ul>
-        <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center pointer" type="button"
-          data-toggle="offcanvas">
-          <span class="bi bi-three-dots-vertical icon-menu"></span>
-        </button>
-      </div>
-    </nav>
-    <div class="container-fluid page-body-wrapper">
-      <nav class="sidebar sidebar-offcanvas" id="sidebar">
-        <div class="user-profile">
-          <div class="user-image">
-            <img id="user-img">
-          </div>
-          <div class="user-name" id="user-name">
-          </div>
-        </div>
-        <ul class="nav">
-          <li class="nav-item pointer">
-            <a class="nav-link reload">
-              <i class="bi bi-arrow-clockwise menu-icon"></i>
-              <span class="menu-title">Reload <span style="opacity: 0.5;">(F5)</span></span>
-            </a>
-          </li>
-          <li class="nav-item pointer">
-            <a class="nav-link SPOTIFY">
-              <i class="menu-icon bi bi-spotify"></i>
-              <span class="menu-title">Spotify</span>
-            </a>
-          </li>
-          <li class="nav-item pointer">
-            <a class="nav-link" id="open-modal" onclick="showPopup()">
-              <i class="menu-icon bi bi-music-note-list"></i>
-              <span class="menu-title">Playlist</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
+  <button id="settings-toggle" class="settings-fab" type="button" aria-label="Open settings" aria-expanded="false" aria-controls="settings-panel"><i class="bi bi-gear-fill" aria-hidden="true"></i></button>
+  <div id="settings-panel" class="settings-panel" hidden>
+    <strong>Mission settings</strong>
+    <a class="settings-action SPOTIFY" href="#">↗ Open Spotify profile</a>
+    <button class="settings-action PLAYLIST-OPEN" type="button">♫ Create a playlist from my top 50</button>
+    <button id="settings-import-link" class="settings-action" type="button">⇧ Import listening history</button>
+    <a class="settings-action" href="./index.html#Contact">✉ Contact</a>
+    <a class="settings-action" href="/logout">↪ Log out</a>
+  </div>
+  <div class="container-fluid page-body-wrapper">
       <div class="main-panel">
         <div class="content-wrapper">
           <section class="cosmic-hero data-hero">
@@ -111,6 +66,29 @@
             <div id="song-now"><p>Checking what is playing…</p></div>
           </section>
 
+          <section class="history-universe-section" id="history-import-section">
+            <div class="history-section-head">
+              <div><span class="section-kicker">THE ARCHIVE / YOUR PERSONAL GALAXY</span><h2>Explore your listening universe</h2><p>Import Spotify Extended Streaming History to reveal the songs, artists and eras behind your listening life. Files are processed locally in your browser.</p></div>
+              <button id="share-universe" class="share-discovery-button" type="button">✦ Share my universe</button>
+            </div>
+            <div class="history-import-row">
+              <label class="history-file-label" for="history-files">⇧ Import Spotify history<input id="history-files" type="file" accept=".json,application/json" multiple></label>
+              <span class="history-file-help">Select one or more extracted Streaming_History_Audio_*.json files from your Spotify data export. ZIP files must be extracted first.</span>
+              <p id="history-import-status" role="status" aria-live="polite">No history imported yet. Your Spotify API dashboard still works without an import.</p>
+            </div>
+            <div class="history-stat-grid" aria-label="Imported history summary">
+              <article class="history-stat"><span>Total listening time</span><strong id="history-total-time">—</strong></article>
+              <article class="history-stat"><span>Listening events</span><strong id="history-events">—</strong></article>
+              <article class="history-stat"><span>Unique tracks</span><strong id="history-tracks">—</strong></article>
+              <article class="history-stat"><span>Unique artists</span><strong id="history-artists">—</strong></article>
+              <article class="history-stat"><span>Active days</span><strong id="history-days">—</strong></article>
+              <article class="history-stat"><span>Top artist by time</span><strong id="history-top-artist">—</strong></article>
+            </div>
+            <div class="history-layout">
+              <section class="history-panel"><h3>Artist constellation</h3><p>Tap a planet to search that artist in your imported archive. Planet size reflects recorded listening time.</p><div id="artist-universe"><p class="empty-state">Your galaxy will appear here after importing history.</p></div><h3>Listening through the years</h3><p>Monthly listening time from imported files.</p><div id="history-monthly-chart" class="history-monthly-chart"><p class="empty-state">Import history to build your timeline.</p></div></section>
+              <section class="history-panel"><h3>Song Time Machine</h3><p>Search a song or artist to see the time accumulated in the imported records.</p><input id="history-song-search" class="history-search" type="search" placeholder="Search your entire music history…" aria-label="Search imported listening history"><div id="history-song-results" class="history-track-results"><p class="empty-state">Your most listened songs will appear here.</p></div><div id="history-track-detail" aria-live="polite"></div></section>
+            </div>
+          </section>
           <section class="dashboard-section">
             <div class="section-heading"><div><span class="section-kicker">01 / THE CURRENT OBSESSION</span><h2>Your chart-topper</h2><p>The track sitting at the top of your personal orbit.</p></div></div>
             <div id="featured-track" class="featured-track"><div class="loading-slab">Mapping your top track…</div></div>
@@ -140,8 +118,7 @@
             <div><span class="section-kicker">YOUR SPOTIFY PROFILE</span><h2 id="user-name">Your profile</h2><p id="profile-meta">Loading your listener profile…</p></div>
             <img id="user-img" alt="Spotify profile image">
           </section>
-          <div class="dashboard-actions"><button class="submit-button PLAYLIST-OPEN" type="button">✦ Create a playlist from my top 50</button><button class="submit-button home" type="button" aria-label="Back to top"><i class="bi bi-arrow-up-circle-fill"></i></button></div>
-        </div>        <br>
+</div>        <br>
         <footer class="footer">
           <div class="d-sm-flex justify-content-center justify-content-sm-between">
             <strong><i
@@ -154,5 +131,6 @@
 <script src="components/user-components.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/cosmic.js"></script>
+<script src="js/history-universe.js"></script>
 
 </html>
