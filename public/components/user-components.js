@@ -1,6 +1,6 @@
 const $ = (selector) => document.querySelector(selector);
 const state = { range: 'short_term', profile: null, tracks: [], artists: [], genres: [], recent: [], device: 'Spotify' };
-const rangeLabels = { short_term: '4 weeks', medium_term: '6 months', long_term: 'All time' };
+const rangeLabels = { short_term: '4 weeks', medium_term: '6 months', long_term: 'Long term' };
 let urlProfile = '';
 let urlPlaylist = '';
 let intervalId;
