@@ -1,5 +1,7 @@
 node_modules/
+.env
 *.env
+server/.env
 __pycache__/
 *.py[cod]
 **/.DS_Store
@@ -7,7 +9,5 @@ __pycache__/
 *.log
 *.tmp
 *.swp
-package-lock.json
 config.txt
 delete-playlist.py
-__tests__/

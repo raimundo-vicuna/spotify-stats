@@ -1,36 +1,21 @@
-// db.js
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-
-dotenv.config();
-
 let User;
-
 function modelUser() {
-    if (!User) {
-        const userSchema = new mongoose.Schema({
-            spotifyId: String,
-            displayName: String,
-            accessToken: String,
-            refreshToken: String,
-            expiresIn: Number,
-        });
-
-        User = mongoose.model("User", userSchema);
-    }
-    return User;
+  if (!User) {
+    const schema = new mongoose.Schema({
+      spotifyId: { type: String, required: true, unique: true, index: true },
+      displayName: { type: String, default: '' },
+      accessToken: { type: String, required: true, select: false },
+      refreshToken: { type: String, default: '', select: false },
+      expiresIn: { type: Number, default: 3600 }
+    }, { timestamps: true });
+    User = mongoose.models.User || mongoose.model('User', schema);
+  }
+  return User;
 }
-
 async function connectdb() {
-    try {
-        await mongoose.connect(process.env.MONGO_URI, {
-            serverSelectionTimeoutMS: 5000, 
-        });
-    } catch (error) {
-        console.error(error.reason);
-        process.exit(1);
-    }
+  if (!process.env.MONGO_URI) throw new Error('Falta MONGO_URI. Configúrala en server/.env.');
+  await mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 });
+  console.log('MongoDB conectado correctamente');
 }
-
-
 module.exports = { connectdb, modelUser };

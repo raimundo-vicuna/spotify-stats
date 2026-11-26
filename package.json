@@ -1,12 +1,12 @@
 {
   "name": "regal-spotify",
   "version": "2.0.5",
-  "description": "ñaoñao",
-  "main": "app.js",
+  "description": "Spotify listening statistics dashboard",
+  "main": "server/app.js",
   "scripts": {
-    "start": "cd server && node app.js",
+    "start": "node server/app.js",
     "delete": "py delete-playlist.py",
-    "test": "npx jest routes.test.js"
+    "test": "jest --runInBand"
   },
   "author": "RV",
   "license": "SaaS",
