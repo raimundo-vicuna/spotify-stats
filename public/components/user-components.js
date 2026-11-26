@@ -1,266 +1,302 @@
-const userElement = document.getElementById('user-name');
-const followingElement = document.querySelector('.about-you');
-const tbody = document.querySelector('.table tbody');
-const topArtistsList = document.querySelector('.table-artists tbody');
-const topGenresList = document.querySelector('.table-genre tbody');
-const recentlyPlayedElement = document.querySelector('.recently-played');
-const songNowElement = document.getElementById('song-now');
-
+const $ = (selector) => document.querySelector(selector);
+const state = { range: 'short_term', profile: null, tracks: [], artists: [], genres: [], recent: [], device: 'Spotify' };
+const rangeLabels = { short_term: '4 weeks', medium_term: '6 months', long_term: 'Long term' };
 let urlProfile = '';
-let genres = '';
-let ISO_country = '';
-let country = '';
-let device = '';
 let urlPlaylist = '';
 let intervalId;
 
-
-fetch('/me')
-    .then(response => response.json())
-    .then(userProfile => {
-        userElement.textContent = userProfile.display_name;
-        ISO_country = userProfile.country;
-        urlProfile = userProfile.external_urls.spotify;
-        const userProfileImage = document.getElementById('user-img');
-        userProfileImage.src = userProfile.images.length > 0 ? userProfile.images[0].url : '';
-    })
-    .catch(() => {
-        userElement.textContent = 'User not found';
-    });
-
-fetch('/me/following')
-    .then(response => response.ok ? response.json() : null)
-    .then(async following => {
-        country = await transform_iso_to_name(ISO_country);
-        if (following && following.artists && following.artists.total) {
-            followingElement.innerHTML = `<p>You follow <strong>${following.artists.total}</strong> people and listen to them from <strong>${country}</strong> on Spotify</p>`;
-        } else {
-            followingElement.innerHTML = `<p style='color: red'>Something's wrong, come back later!</p>`;
-        }
-    })
-    .catch(() => {
-        followingElement.innerHTML = `<p style="color:red;">We don't have data about you!</p>`;
-    });
-
-fetch('/top-tracks')
-    .then(response => response.ok ? response.json() : null)
-    .then(topTracks => {
-        let index = 0;
-        topTracks.forEach(track => {
-            const newRow = document.createElement('tr');
-            newRow.classList.add('trackRow');
-            newRow.setAttribute('data-url', track.external_urls.spotify);
-            const imageUrl = track.album.images?.[2]?.url || '';
-
-            newRow.innerHTML = `
-                <td>${index + 1}</td>
-                <td></td>
-                <td>
-                    <img src='${imageUrl}' alt="${track.name}" style="object-fit: cover; border-radius: 5px;">
-                </td>
-                <td></td>
-                <td>${track.name}</td>
-                <td></td>
-                <td>${track.artists.map(artist => artist.name).join(', ')}</td>
-            `;
-
-            newRow.addEventListener('click', function () {
-                openSpotify(track.external_urls.spotify);
-            });
-
-            tbody.appendChild(newRow);
-            index++;
-        });
-    })
-    .catch(() => {
-        tbody.innerHTML = `<tr><td style="color:red;" colspan="11">We couldn't find your top tracks! Try again.</td></tr>`;
-    });
-
-fetch('/top-artists')
-    .then(response => response.ok ? response.json() : null)
-    .then(topArtists => {
-        let index = 0;
-        topArtists.forEach(artist => {
-            const imageUrl = artist.images?.[2]?.url || '';
-            const listItem = document.createElement('tr');
-            genres = artist.genres.join(', ');
-
-            listItem.innerHTML = `
-                <td>${index + 1}</td>
-                <td>
-                    <img src='${imageUrl}' alt="${artist.name}" style="object-fit: cover; border-radius: 5px;">
-                </td>               
-                <td>${artist.name}</td>
-                <td></td>
-                <td></td>
-            `;
-
-            let uri = artist.href.split('/').pop();
-            listItem.addEventListener('click', () => {
-                openSpotify(`https://open.spotify.com/intl-es/artist/${uri}`);
-            });
-
-            topArtistsList.appendChild(listItem);
-            index++;
-        });
-    })
-    .catch(() => {
-        topArtistsList.innerHTML = `<tr><td colspan="4" style='color: red;'>We couldn't find your favorite artists! Try again.</td></tr>`;
-    });
-
-fetch('/top-genres')
-    .then(response => response.ok ? response.json() : null)
-    .then(topGenres => {
-        let index = 0;
-        topGenres.forEach(genre => {
-            const listItem = document.createElement('tr');
-            listItem.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${genre.name}</td>
-            `;
-            topGenresList.appendChild(listItem);
-            index++;
-        });
-    })
-    .catch(() => {
-        topGenresList.innerHTML = `<tr><td style='color:red;' colspan="2">We couldn't find your top genres! Try again.</td></tr>`;
-    });
-
-fetch('/recently-played')
-    .then(response => response.json())
-    .then(recentlyPlayed => {
-        if (!recentlyPlayed || recentlyPlayed.length === 0) {
-            return;
-        }
-        let index = 0;
-        recentlyPlayed.forEach(track => {
-            const trackElement = document.createElement('tr');
-            trackElement.innerHTML = `
-                <td>${index + 1}</td>
-                <td>
-                    <img src='${track.track.album.images[0].url}' alt="${track.name}" style="object-fit: cover; border-radius: 5px;">
-                </td>
-                <td>${track.track.name} <strong>(${track.track.artists[0].name})</strong></td>
-            `;
-            trackElement.addEventListener('click', () => {
-                openSpotify(track.track.external_urls.spotify);
-            });
-            recentlyPlayedElement.appendChild(trackElement);
-            index++;
-        });
-    })
-    .catch(() => {
-        recentlyPlayedElement.innerHTML = `<p style='color: red;'>We couldn't find your recently played tracks! Try Again.</p>`;
-    });
-
-fetch('/devices')
-    .then(response => response.json())
-    .then(data => {
-        if (!data) return;
-        data.forEach(Device => {
-            if (Device.is_active) {
-                device = Device.name;
-            }
-        });
-    });
-
-document.querySelector('.SPOTIFY').addEventListener('click', event => {
-    event.preventDefault();
-    openSpotify();
-});
-
-document.querySelector('.PLAYLIST').addEventListener('click', event => {
-    event.preventDefault();
-    playlist();
-});
-
-document.querySelector('.GO').addEventListener('click', event => {
-    event.preventDefault();
-    openSpotify(urlPlaylist);
-});
-
-window.addEventListener('beforeunload', () => {
-    clearInterval(intervalId);
-});
-
-function fetchSongNow() {
-    fetch('/song-now')
-        .then(response => response.json())
-        .then(data => {
-            songNowElement.style.cursor = 'pointer';
-            songNowElement.innerHTML = `
-                <a style="text-decoration: none; color: #666666;" 
-                    href="${data.item.external_urls.spotify}" target="_blank" rel="noopener noreferrer">
-                    <h6>
-                        You are listening to <strong>${data.item.name}</strong> 
-                        <img src="${data.item.album.images[2].url}" 
-                            alt="${data.item.name}" 
-                            style="object-fit: cover; border-radius: 5px; height: 1.5em; width: auto;">
-                    </h6>
-                    <div>
-                        By <strong>${data.item.artists[0].name}</strong> on <strong>${device}</strong>
-                    </div>
-                </a>`;
-        })
-        .catch(() => {
-            songNowElement.innerHTML = `<h6>You are not listening to any song</h6>`;
-        });
+function node(tag, className, text) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  return element;
+}
+function image(url, alt, className) {
+  const element = node('img', className);
+  element.src = url || '';
+  element.alt = alt || '';
+  element.loading = 'lazy';
+  return element;
+}
+function spotifyLink(url) {
+  if (url) window.open(url, '_blank', 'noopener,noreferrer');
+}
+async function getJSON(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Request failed: ' + response.status);
+  return response.json();
+}
+function duration(ms) {
+  if (!Number.isFinite(ms)) return '—';
+  const total = Math.round(ms / 1000);
+  return Math.floor(total / 60) + ':' + String(total % 60).padStart(2, '0');
+}
+function setText(id, value) {
+  const element = document.getElementById(id);
+  if (element) element.textContent = value;
+}
+function showEmpty(target, message) {
+  target.replaceChildren(node('div', 'empty-state', message));
 }
 
-function playlist() {
-    const element = document.querySelector('.playlist-text');
-    const button = document.querySelector('.submit-button');
-    const goButton = document.querySelector('.GO');
-    fetch('/playlist')
-        .then(response => response.json())
-        .then(data => {
-            urlPlaylist = data.playlistUrl;
-            if (!data) {
-                element.style.color = 'red';
-                element.textContent = 'The playlist could not be created';
-                button.textContent = 'Close';
-                document.querySelector('.EXIT').addEventListener('click', event => {
-                    event.preventDefault();
-                    hidePopup();
-                });
-            } else {
-                element.style.color = 'green';
-                element.textContent = 'The playlist was created successfully';
-                button.style.display = 'none';
-                goButton.style.display = 'block';
-            }
-        });
+async function loadProfile() {
+  try {
+    state.profile = await getJSON('/me');
+    const profile = state.profile;
+    urlProfile = profile.external_urls?.spotify || '';
+    setText('user-name', profile.display_name || 'Spotify listener');
+    const country = profile.country ? new Intl.DisplayNames([navigator.language || 'en'], { type: 'region' }).of(profile.country) : 'Location unavailable';
+    setText('profile-meta', [country, profile.product ? profile.product + ' plan' : '', profile.followers?.total != null ? profile.followers.total + ' followers' : ''].filter(Boolean).join(' · '));
+    const avatar = $('#user-img');
+    if (avatar && profile.images?.[0]?.url) avatar.src = profile.images[0].url;
+    const following = await getJSON('/me/following');
+    const total = following?.artists?.total;
+    if (total != null) setText('profile-meta', (country || '') + ' · ' + total.toLocaleString() + ' artists followed' + (profile.product ? ' · ' + profile.product + ' plan' : ''));
+  } catch (error) {
+    setText('user-name', 'Spotify profile unavailable');
+    setText('profile-meta', 'Could not load profile details right now.');
+  }
 }
 
-async function transform_iso_to_name(iso) {
-    if (!iso) {
-        return '<span style="color: red;">(We don\'t know your country!)</span>';
+function renderSnapshot() {
+  const tracks = state.tracks;
+  const artists = state.artists;
+  if (!tracks.length) {
+    ['stat-top-track','stat-top-artist'].forEach(id => setText(id, 'No data'));
+    setText('stat-artists', '0');
+    setText('stat-duration', '—');
+    setText('stat-popularity', '—');
+    return;
+  }
+  const first = tracks[0];
+  setText('stat-top-track', first.name || 'Unknown track');
+  setText('stat-top-artist', first.artists?.map(a => a.name).join(', ') || 'Unknown artist');
+  setText('stat-artists', String(new Set(tracks.flatMap(t => (t.artists || []).map(a => a.id || a.name))).size));
+  const average = tracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0) / tracks.length;
+  setText('stat-duration', duration(average));
+  const popularities = tracks.filter(t => Number.isFinite(t.popularity)).map(t => t.popularity);
+  setText('stat-popularity', popularities.length ? Math.round(popularities.reduce((a,b) => a+b,0) / popularities.length) + '/100' : '—');
+}
+
+function renderFeaturedTrack() {
+  const target = $('#featured-track');
+  target.replaceChildren();
+  const track = state.tracks[0];
+  if (!track) return showEmpty(target, 'Spotify has not returned your top tracks yet.');
+  const cover = image(track.album?.images?.[0]?.url, track.name, 'featured-cover');
+  const copy = node('div', 'featured-copy');
+  copy.append(node('span', 'rank-label', '✦ #1 IN YOUR ' + rangeLabels[state.range].toUpperCase() + ' CHART'));
+  copy.append(node('h3', '', track.name));
+  copy.append(node('p', '', (track.artists || []).map(a => a.name).join(', ') + ' · ' + (track.album?.name || '')));
+  const meta = node('div', 'featured-meta');
+  meta.append(node('span', 'data-chip', '◷ ' + duration(track.duration_ms)));
+  if (Number.isFinite(track.popularity)) meta.append(node('span', 'data-chip', '✧ Popularity ' + track.popularity + '/100'));
+  meta.append(node('span', 'data-chip', '↗ Open in Spotify'));
+  copy.append(meta);
+  target.append(cover, copy);
+  target.onclick = () => spotifyLink(track.external_urls?.spotify);
+  target.style.cursor = 'pointer';
+}
+
+function renderTracks() {
+  const target = $('#top-tracks-grid');
+  target.replaceChildren();
+  if (!state.tracks.length) return showEmpty(target, 'No top tracks found for this period.');
+  state.tracks.forEach((track, index) => {
+    const card = node('article', 'track-card trackRow');
+    card.dataset.search = [track.name, ...(track.artists || []).map(a => a.name), track.album?.name].join(' ').toLowerCase();
+    card.append(node('span', 'track-rank', String(index + 1)));
+    card.append(image(track.album?.images?.[1]?.url || track.album?.images?.[0]?.url, track.name));
+    card.append(node('h3', '', track.name));
+    card.append(node('p', '', (track.artists || []).map(a => a.name).join(', ')));
+    const extra = node('div', 'track-extra');
+    extra.append(node('span', '', duration(track.duration_ms)));
+    extra.append(node('span', '', Number.isFinite(track.popularity) ? '✦ ' + track.popularity : ''));
+    card.append(extra);
+    card.addEventListener('click', () => spotifyLink(track.external_urls?.spotify));
+    target.append(card);
+  });
+  applyTrackSearch();
+}
+function applyTrackSearch() {
+  const query = ($('#cosmic-track-search')?.value || '').trim().toLocaleLowerCase();
+  let visible = 0;
+  document.querySelectorAll('.trackRow').forEach(card => {
+    const match = !query || card.dataset.search.includes(query);
+    card.hidden = !match;
+    if (match) visible++;
+  });
+  const heading = $('#cosmic-track-search');
+  if (heading) heading.setAttribute('aria-description', query ? visible + ' matching tracks' : 'All top tracks');
+}
+
+function renderArtists() {
+  const target = $('#top-artists-grid');
+  target.replaceChildren();
+  if (!state.artists.length) return showEmpty(target, 'No top artists found for this period.');
+  state.artists.forEach((artist, index) => {
+    const card = node('article', 'artist-card');
+    card.append(image(artist.images?.[0]?.url || artist.images?.[1]?.url, artist.name));
+    card.append(node('h3', '', String(index + 1).padStart(2, '0') + ' · ' + artist.name));
+    card.append(node('p', '', (artist.genres || []).slice(0, 3).join(' / ') || 'Genre not listed'));
+    card.addEventListener('click', () => spotifyLink('https://open.spotify.com/artist/' + encodeURIComponent(artist.id || artist.href?.split('/').pop() || '')));
+    target.append(card);
+  });
+}
+function renderGenres() {
+  const target = $('#genre-spectrum');
+  target.replaceChildren();
+  if (!state.genres.length) return showEmpty(target, 'Genre information is not available yet.');
+  const max = Math.max(...state.genres.map(g => g.count || 1), 1);
+  state.genres.forEach((genre, index) => {
+    const row = node('div', 'genre-row');
+    const top = node('div', 'genre-topline');
+    top.append(node('span', '', String(index + 1).padStart(2, '0') + ' · ' + genre.name));
+    top.append(node('small', '', (genre.count || 1) + ' artists'));
+    const bar = node('div', 'genre-bar');
+    const fill = node('span');
+    fill.style.width = Math.max(6, (genre.count || 1) / max * 100) + '%';
+    bar.append(fill);
+    row.append(top, bar);
+    target.append(row);
+  });
+}
+function renderTimeline() {
+  const target = $('#listening-timeline');
+  target.replaceChildren();
+  if (!state.recent.length) return showEmpty(target, 'No recent listening activity was returned.');
+  state.recent.forEach(item => {
+    const track = item.track || {};
+    const row = node('article', 'timeline-item');
+    row.append(image(track.album?.images?.[2]?.url || track.album?.images?.[0]?.url, track.name));
+    const copy = node('div', 'timeline-copy');
+    copy.append(node('strong', '', track.name || 'Unknown track'));
+    copy.append(node('span', '', (track.artists || []).map(a => a.name).join(', ')));
+    const date = item.played_at ? new Date(item.played_at) : null;
+    copy.append(node('small', '', date && !Number.isNaN(date.getTime()) ? date.toLocaleString() : 'Recently played'));
+    row.append(copy);
+    row.addEventListener('click', () => spotifyLink(track.external_urls?.spotify));
+    target.append(row);
+  });
+}
+
+async function loadCharts() {
+  const range = state.range;
+  const targets = ['top-tracks-grid','top-artists-grid','genre-spectrum','featured-track'];
+  targets.forEach(id => { const element = document.getElementById(id); if (element) element.setAttribute('aria-busy', 'true'); });
+  try {
+    const [tracks, artists, genres] = await Promise.all([
+      getJSON('/top-tracks?range=' + range),
+      getJSON('/top-artists?range=' + range),
+      getJSON('/top-genres?range=' + range)
+    ]);
+    state.tracks = Array.isArray(tracks) ? tracks : [];
+    state.artists = Array.isArray(artists) ? artists : [];
+    state.genres = Array.isArray(genres) ? genres : [];
+    renderSnapshot(); renderFeaturedTrack(); renderTracks(); renderArtists(); renderGenres();
+  } catch (error) {
+    targets.forEach(id => { const element = document.getElementById(id); if (element) showEmpty(element, 'Could not load Spotify insights. Try refreshing or reconnecting Spotify.'); });
+  } finally {
+    targets.forEach(id => { const element = document.getElementById(id); if (element) element.removeAttribute('aria-busy'); });
+  }
+}
+async function loadRecent() {
+  try { state.recent = await getJSON('/recently-played'); renderTimeline(); }
+  catch { showEmpty($('#listening-timeline'), 'Could not load recent listening activity.'); }
+}
+async function fetchSongNow() {
+  const target = $('#song-now');
+  try {
+    const data = await getJSON('/song-now');
+    if (!data || typeof data === 'string' || !data.item) {
+      target.replaceChildren(node('p', '', 'Nothing playing right now. When Spotify starts a track, your live signal will appear here.'));
+      return;
     }
-    try {
-        const response = await fetch(`https://restcountries.com/v3.1/alpha/${iso}`);
-        if (!response.ok) {
-            throw new Error(`Error fetching country data: ${response.statusText}`);
-        }
-        const data = await response.json();
-
-        if (Array.isArray(data) && data.length > 0) {
-            return data[0].name.common;
-        } else {
-            throw new Error('Country not found');
-        }
-    } catch (error) {
-        return `Error: ${error.message}`;
+    const track = data.item;
+    target.replaceChildren();
+    target.append(image(track.album?.images?.[1]?.url || track.album?.images?.[0]?.url, track.name, 'now-art'));
+    const copy = node('div', 'now-copy');
+    copy.append(node('strong', '', track.name));
+    copy.append(node('span', '', (track.artists || []).map(a => a.name).join(', ') + ' · ' + (data.is_playing ? 'Playing' : 'Paused')));
+    copy.append(node('small', '', state.device || 'Spotify'));
+    if (Number.isFinite(data.progress_ms) && Number.isFinite(track.duration_ms)) {
+      const progress = node('div', 'progress-track');
+      const fill = node('div', 'progress-fill');
+      fill.style.width = Math.min(100, data.progress_ms / track.duration_ms * 100) + '%';
+      progress.append(fill); copy.append(progress);
     }
+    target.append(copy);
+    target.onclick = () => spotifyLink(track.external_urls?.spotify);
+    target.style.cursor = 'pointer';
+  } catch {
+    target.replaceChildren(node('p', '', 'Live playback information is unavailable right now.'));
+  }
 }
-
-function mail() {
-    location.href = 'mailto:raivicuna@gmail.com?subject=Contact';
+async function loadDevices() {
+  try {
+    const devices = await getJSON('/devices');
+    const active = devices.find(device => device.is_active);
+    state.device = active?.name || 'Spotify device';
+  } catch { state.device = 'Spotify device'; }
 }
-
-function openSpotify(url = urlProfile) {
-    window.open(`${url}`, '_blank');
+async function playlist() {
+  const message = $('.playlist-text');
+  const button = $('.PLAYLIST');
+  const goButton = $('.GO');
+  if (message) message.textContent = 'Building your top 50 playlist…';
+  if (button) button.disabled = true;
+  try {
+    const data = await getJSON('/playlist');
+    urlPlaylist = data.playlistUrl;
+    if (!urlPlaylist) throw new Error(data.error || 'Playlist URL missing');
+    if (message) message.textContent = 'Your playlist is ready. Open it in Spotify!';
+    if (button) button.style.display = 'none';
+    if (goButton) goButton.style.display = 'block';
+  } catch (error) {
+    if (message) message.textContent = error.message || 'The playlist could not be created.';
+    if (button) button.disabled = false;
+  }
 }
+function showPopup() {
+  const overlay = $('#overlay'), popup = $('#popup');
+  if (!overlay || !popup) return;
+  overlay.style.display = 'block';
+  window.setTimeout(() => popup.classList.add('active'), 10);
+}
+function hidePopup() {
+  const popup = $('#popup'), overlay = $('#overlay');
+  if (!overlay || !popup) return;
+  popup.classList.remove('active');
+  window.setTimeout(() => { overlay.style.display = 'none'; }, 300);
+}
+window.showPopup = showPopup;
+window.hidePopup = hidePopup;
 
-
+document.querySelectorAll('.range-button').forEach(button => {
+  button.addEventListener('click', () => {
+    if (button.dataset.range === state.range) return;
+    state.range = button.dataset.range;
+    document.querySelectorAll('.range-button').forEach(item => item.classList.toggle('active', item === button));
+    loadCharts();
+  });
+});
+$('#cosmic-track-search')?.addEventListener('input', applyTrackSearch);
+$('.PLAYLIST-OPEN')?.addEventListener('click', event => { event.preventDefault(); showPopup(); });
+$('.PLAYLIST')?.addEventListener('click', event => { event.preventDefault(); playlist(); });
+$('.GO')?.addEventListener('click', event => { event.preventDefault(); spotifyLink(urlPlaylist); });
+$('.SPOTIFY')?.addEventListener('click', event => { event.preventDefault(); spotifyLink(urlProfile); });
+$('.reload')?.addEventListener('click', event => { event.preventDefault(); window.location.reload(); });
+$('.home')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+$('.github')?.addEventListener('click', () => window.open('https://github.com/raideus138/regal', '_blank', 'noopener,noreferrer'));
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') hidePopup();
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); $('#cosmic-track-search')?.focus(); }
+});
+setText('date', new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
+loadProfile();
+loadDevices();
+loadCharts();
+loadRecent();
 fetchSongNow();
-intervalId = setInterval(fetchSongNow, 60000);
+intervalId = window.setInterval(fetchSongNow, 30000);
+window.addEventListener('beforeunload', () => window.clearInterval(intervalId));
