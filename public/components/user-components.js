@@ -281,7 +281,8 @@ document.querySelectorAll('.range-button').forEach(button => {
   });
 });
 $('#cosmic-track-search')?.addEventListener('input', applyTrackSearch);
-$('.PLAYLIST')?.addEventListener('click', event => { event.preventDefault(); showPopup(); playlist(); });
+$('.PLAYLIST-OPEN')?.addEventListener('click', event => { event.preventDefault(); showPopup(); });
+$('.PLAYLIST')?.addEventListener('click', event => { event.preventDefault(); playlist(); });
 $('.GO')?.addEventListener('click', event => { event.preventDefault(); spotifyLink(urlPlaylist); });
 $('.SPOTIFY')?.addEventListener('click', event => { event.preventDefault(); spotifyLink(urlProfile); });
 $('.reload')?.addEventListener('click', event => { event.preventDefault(); window.location.reload(); });
