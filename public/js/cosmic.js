@@ -13,6 +13,7 @@
     canvas.width = Math.floor(width * ratio); canvas.height = Math.floor(height * ratio);
     canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    if (frame) window.cancelAnimationFrame(frame);
     const count = Math.min(150, Math.floor(width * height / 8500));
     stars = Array.from({ length: count }, () => ({
       x: Math.random() * width, y: Math.random() * height,
@@ -31,6 +32,7 @@
     });
     if (!reducedMotion) frame = window.requestAnimationFrame(draw);
   };
+  document.querySelectorAll('body > section').forEach(section => { section.style.position = 'relative'; section.style.zIndex = '1'; });
   resize();
   window.addEventListener('resize', resize, { passive: true });
   if (reducedMotion) window.cancelAnimationFrame(frame);
