@@ -30,6 +30,10 @@ A Node.js/Express application for Spotify sign-in, listening statistics, followe
 
 Never commit `server/.env` or publish credentials. Rotate any credential that has been exposed.
 
+## Cosmic experience
+
+The sign-in page and dashboard use a dark space-inspired theme with an animated starfield, nebula lighting, responsive layouts, and reduced-motion support. The dashboard also includes a live top-track filter and an optional Nebula mode. These effects are implemented with vanilla CSS and JavaScript; no additional runtime dependencies are required.
+
 ## Tests
 
 Run `npm test` to execute the route authentication tests.
