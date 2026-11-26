@@ -86,127 +86,62 @@
       </nav>
       <div class="main-panel">
         <div class="content-wrapper">
-          <div class="row">
-            <div class="col-sm-12 mb-4 mb-xl-0">
-              <h4 class="font-weight-bold text-dark">Hi, welcome back!</h4>
-              <p class="font-weight-normal mb-2 text-muted" id="date"></p>
+          <section class="cosmic-hero data-hero">
+            <div>
+              <div class="cosmic-eyebrow">✦ YOUR PERSONAL SOUND ARCHIVE</div>
+              <h1>Your music, decoded.</h1>
+              <p>A living map of what you play, who you follow and the sounds that define your current era.</p>
             </div>
-            <div class="card card-song-now">
-              <div class="card-body">
-                <h4 class="card-title">Playing now</h4>
-                <p class="card-description">
-                  What you are listening to now
-                </p>
-                <div id="song-now">
-                </div>
-              </div>
+            <div class="range-switch" role="group" aria-label="Choose listening period">
+              <button class="range-button active" data-range="short_term">4 weeks</button>
+              <button class="range-button" data-range="medium_term">6 months</button>
+              <button class="range-button" data-range="long_term">All time</button>
             </div>
-            <div class="card">
-              <div class="card-body you">
-                <h4 class="card-title">You!</h4>
-                <p class="card-description">
-                  Something about you
-                </p>
-                <div class="about-you">
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row mt-3">
-          </div>
-          <div class="row">
-            <div class="card">
-              <div class="card-body">
-                <h4 class="card-title">Top Tracks</h4>
-                <p class="card-description">
-                  Your top tracks of the month
-                </p>
-                <div class="table-responsive">
-                  <table class="table table-hover">
-                    <thead>
-                      <tr>
-                        <th>Top</th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th>Name</th>
-                        <th></th>
-                        <th>Artist</th>
-                      </tr>
-                    </thead>
-                    <tbody class="pointer">
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-            <br>
-            <div class="card">
-              <div class="card-body">
-                <h4 class="card-title">Top artists</h4>
-                <p class="card-description">
-                  Your top artists of the month
-                </p>
-                <div class="table-responsive">
-                  <table class="table-artists table table-hover">
-                    <thead>
-                      <tr>
-                        <th>Top</th>
-                        <th></th>
-                        <th>Artist</th>
-                      </tr>
-                    </thead>
-                    <tbody class="pointer">
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-body">
-                <h4 class="card-title">Recent play</h4>
-                <p class="card-description">
-                  What have you been listening to?
-                </p>
-                <div class="table-responsive">
-                  <table class="recently-played table table-hover">
-                    <thead>
-                      <tr>
-                        <th>Top</th>
-                        <th></th>
-                        <th>Track</th>
-                      </tr>
-                    </thead>
-                    <tbody class="pointer">
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-body">
-                <h4 class="card-title">Top Genres</h4>
-                <p class="card-description">
-                  Your top genres of the month
-                </p>
-                <div class="table-responsive">
-                  <table class="table-genre table table-hover">
-                    <thead>
-                      <tr>
-                        <th>Top</th>
-                        <th>Genre</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-            <button class="submit-button home"><i class="bi bi-arrow-up-circle-fill"></i></button>
-          </div>
-        </div>
-        <br>
+          </section>
+
+          <section class="insight-grid" aria-label="Your listening snapshot">
+            <article class="insight-tile"><span class="insight-label">YOUR NO. 1 TRACK</span><strong id="stat-top-track">Loading…</strong><small id="stat-top-artist">Finding your current obsession</small></article>
+            <article class="insight-tile"><span class="insight-label">ARTISTS IN YOUR TOP 10</span><strong id="stat-artists">—</strong><small>Distinct voices in your rotation</small></article>
+            <article class="insight-tile"><span class="insight-label">AVERAGE TRACK LENGTH</span><strong id="stat-duration">—</strong><small>Across your top tracks</small></article>
+            <article class="insight-tile"><span class="insight-label">AVG. TRACK POPULARITY</span><strong id="stat-popularity">—</strong><small>Spotify popularity score / 100</small></article>
+          </section>
+
+          <section class="now-playing-panel card card-song-now">
+            <div class="section-kicker">LIVE TRANSMISSION <span class="live-dot"></span></div>
+            <div id="song-now"><p>Checking what is playing…</p></div>
+          </section>
+
+          <section class="dashboard-section">
+            <div class="section-heading"><div><span class="section-kicker">01 / THE CURRENT OBSESSION</span><h2>Your chart-topper</h2><p>The track sitting at the top of your personal orbit.</p></div></div>
+            <div id="featured-track" class="featured-track"><div class="loading-slab">Mapping your top track…</div></div>
+          </section>
+
+          <section class="dashboard-section">
+            <div class="section-heading"><div><span class="section-kicker">02 / FREQUENT ROTATION</span><h2>Tracks in orbit</h2><p>Your top 10, ranked and ready to explore. Select a card to open it in Spotify.</p></div><input id="cosmic-track-search" class="cosmic-search" type="search" placeholder="Search tracks or artists…" aria-label="Search tracks or artists"></div>
+            <div id="top-tracks-grid" class="track-grid"><div class="loading-slab">Collecting tracks…</div></div>
+          </section>
+
+          <section class="dashboard-section">
+            <div class="section-heading"><div><span class="section-kicker">03 / THE PEOPLE BEHIND THE SOUND</span><h2>Your artist constellation</h2><p>The artists shaping your listening universe right now.</p></div></div>
+            <div id="top-artists-grid" class="artist-grid"><div class="loading-slab">Finding your artists…</div></div>
+          </section>
+
+          <section class="dashboard-section">
+            <div class="section-heading"><div><span class="section-kicker">04 / YOUR SONIC DNA</span><h2>Genre spectrum</h2><p>Genres represented across your top artists. Bars show how often each genre appears in that artist set, not listening minutes.</p></div></div>
+            <div id="genre-spectrum" class="genre-spectrum"><div class="loading-slab">Reading your sonic DNA…</div></div>
+          </section>
+
+          <section class="dashboard-section">
+            <div class="section-heading"><div><span class="section-kicker">05 / RECENT SIGNALS</span><h2>Listening timeline</h2><p>Your latest Spotify listening activity, newest first.</p></div></div>
+            <div id="listening-timeline" class="listening-timeline"><div class="loading-slab">Rewinding your recent plays…</div></div>
+          </section>
+
+          <section class="profile-strip card">
+            <div><span class="section-kicker">YOUR SPOTIFY PROFILE</span><h2 id="user-name">Your profile</h2><p id="profile-meta">Loading your listener profile…</p></div>
+            <img id="user-img" alt="Spotify profile image">
+          </section>
+          <div class="dashboard-actions"><button class="submit-button PLAYLIST" type="button">✦ Create a playlist from my top 50</button><button class="submit-button home" type="button" aria-label="Back to top"><i class="bi bi-arrow-up-circle-fill"></i></button></div>
+        </div>        <br>
         <footer class="footer">
           <div class="d-sm-flex justify-content-center justify-content-sm-between">
             <strong><i
