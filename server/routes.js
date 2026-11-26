@@ -108,7 +108,7 @@ function getRoutes(app) {
   });
   app.get('/top-genres', requireAuthentication, async (req, res) => {
     try {
-      const r = await spotifyRequest(req, 'get', '/me/top/artists', { params: { limit: 10, time_range: 'short_term' } });
+      const r = await spotifyRequest(req, 'get', '/me/top/artists', { params: { limit: 10 } });
       const counts = (r.data.items || []).flatMap((artist) => artist.genres || []).reduce((acc, genre) => {
         acc[genre] = (acc[genre] || 0) + 1; return acc;
       }, {});
