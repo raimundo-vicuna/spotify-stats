@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const STORAGE_KEY = 'spotifyStatsImportedHistoryV1';
+  const STORAGE_KEY = 'spotifyStatsImportedHistoryV2';
   const $ = (selector) => document.querySelector(selector);
   let imported = null;
 
@@ -279,26 +279,19 @@
 
   async function importFiles(files) {
     if (!files.length) return;
+    const file=files[0];
+    if (!file.name.toLowerCase().endsWith('.zip')) return setStatus('Selecciona el ZIP completo de Spotify Extended Streaming History.','error');
+    const formData=new FormData(); formData.append('historyZip',file);
+    setStatus('Subiendo y procesando tu ZIP… no cierres esta pestaña.','info');
     try {
-      const payloads = await Promise.all(Array.from(files).map(async (file) => {
-        if (!file.name.toLowerCase().endsWith('.json')) throw new Error(file.name + ': selecciona archivos JSON extraídos del ZIP de Spotify.');
-        return JSON.parse(await file.text());
-      }));
-      const next = aggregateHistory(payloads);
-      if (!next.eventCount) throw new Error('No encontramos reproducciones válidas en esos archivos.');
-      imported = next;
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(imported)); }
-      catch { setStatus('Historial cargado en esta sesión; el navegador no permitió guardarlo para la próxima visita.', 'warning'); }
+      const response=await fetch('/history/import',{method:'POST',body:formData});
+      const payload=await response.json();
+      if(!response.ok) throw new Error(payload.error||'No se pudo procesar el ZIP.');
+      imported=payload;
+      try{localStorage.setItem(STORAGE_KEY,JSON.stringify(imported));}catch{}
       renderSummary();
-      setStatus(
-        'Historial importado: ' + next.eventCount.toLocaleString() + ' eventos, ' +
-        next.uniqueTracks.toLocaleString() + ' canciones y ' + formatMinutes(next.totalMs) +
-        '. Los datos se procesan en este navegador.',
-        'success'
-      );
-    } catch (error) {
-      setStatus(error.message || 'No se pudo importar el historial.', 'error');
-    }
+      setStatus('Historial procesado: '+imported.eventCount.toLocaleString()+' eventos, '+imported.uniqueTracks.toLocaleString()+' canciones, '+imported.uniqueArtists.toLocaleString()+' artistas y '+formatMinutes(imported.totalMs)+'.','success');
+    } catch(error){ setStatus(error.message||'No se pudo importar el historial.','error'); }
   }
 
   function initSettings() {
