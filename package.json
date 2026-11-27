@@ -29,6 +29,7 @@
     "path": "^0.12.7",
     "querystring": "^0.2.1",
     "adm-zip": "^0.5.16",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "@vercel/blob": "^2.3.1"
   }
 }

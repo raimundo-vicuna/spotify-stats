@@ -279,26 +279,49 @@
 
   async function importFiles(files) {
     if (!files.length) return;
-    const file=files[0];
-    if (!file.name.toLowerCase().endsWith('.zip')) return setStatus('Selecciona el ZIP completo de Spotify Extended Streaming History.','error');
-    const formData=new FormData(); formData.append('historyZip',file);
-    setStatus('Subiendo y procesando tu ZIP… no cierres esta pestaña.','info');
+    const file = files[0];
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+      return setStatus('Selecciona el ZIP completo de Spotify Extended Streaming History.', 'error');
+    }
+    if (file.size > 100 * 1024 * 1024) {
+      return setStatus('El ZIP supera el límite de procesamiento de 100 MB.', 'error');
+    }
+
+    setStatus('Preparando una subida privada…', 'info');
     try {
-      const response=await fetch('/history/import',{method:'POST',body:formData});
-      const contentType=response.headers.get('content-type')||'';
-      let payload;
-      if(contentType.includes('application/json')){
-        payload=await response.json();
-      }else{
-        const raw=await response.text();
-        payload={error:raw.trim().slice(0,500)||'El servidor rechazó la subida del ZIP.'};
-      }
-      if(!response.ok) throw new Error(payload.error||'No se pudo procesar el ZIP.');
-      imported=payload;
-      try{localStorage.setItem(STORAGE_KEY,JSON.stringify(imported));}catch{}
+      // The SDK is loaded as an ESM browser module because this page has no bundler.
+      const { upload } = await import('https://esm.sh/@vercel/blob@2.3.1/client');
+      const targetResponse = await fetch('/history/upload-target', { method: 'POST' });
+      const target = await targetResponse.json();
+      if (!targetResponse.ok) throw new Error(target.error || 'No se pudo preparar la subida.');
+
+      setStatus('Subiendo ZIP directamente a Vercel Blob…', 'info');
+      const blob = await upload(target.pathname, file, {
+        access: 'private',
+        handleUploadUrl: '/history/upload-token'
+      });
+
+      setStatus('ZIP subido. Procesando tu historial…', 'info');
+      const response = await fetch('/history/import-blob', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pathname: blob.pathname })
+      });
+      const contentType = response.headers.get('content-type') || '';
+      const payload = contentType.includes('application/json')
+        ? await response.json()
+        : { error: (await response.text()).trim().slice(0, 500) || 'El servidor rechazó el procesamiento.' };
+      if (!response.ok) throw new Error(payload.error || 'No se pudo procesar el ZIP.');
+
+      imported = payload;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(imported)); } catch {}
       renderSummary();
-      setStatus('Historial procesado: '+imported.eventCount.toLocaleString()+' eventos, '+imported.uniqueTracks.toLocaleString()+' canciones, '+imported.uniqueArtists.toLocaleString()+' artistas y '+formatMinutes(imported.totalMs)+'.','success');
-    } catch(error){ setStatus(error.message||'No se pudo importar el historial.','error'); }
+      setStatus('Historial procesado: ' + imported.eventCount.toLocaleString() + ' eventos, ' +
+        imported.uniqueTracks.toLocaleString() + ' canciones, ' + imported.uniqueArtists.toLocaleString() +
+        ' artistas y ' + formatMinutes(imported.totalMs) + '.', 'success');
+    } catch (error) {
+      setStatus(error.message || 'No se pudo importar el historial.', 'error');
+    }
   }
 
   function initSettings() {
