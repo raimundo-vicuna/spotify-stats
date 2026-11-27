@@ -52,23 +52,92 @@ function getRoutes(app) {
     return destroy();
   });
 
-  app.post('/history/import', requireAuthentication, (req, res, next) => {
-    const multer = require('multer');
-    const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024, files: 1 } }).single('historyZip');
-    upload(req, res, (error) => {
-      if (error) {
-        if (error.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'El ZIP supera el límite de 50 MB.' });
-        return next(error);
-      }
-      try {
-        if (!req.file) return res.status(400).json({ error: 'Sube el ZIP completo de Spotify.' });
-        if (!req.file.originalname.toLowerCase().endsWith('.zip')) return res.status(400).json({ error: 'El archivo debe ser un ZIP.' });
-        const { processSpotifyHistoryZip } = require('./history-import');
-        return res.json(processSpotifyHistoryZip(req.file.buffer));
-      } catch (error) {
-        return res.status(422).json({ error: error.message || 'No se pudo procesar el historial.' });
-      }
+  // Reserve a one-time, session-bound Blob pathname. The browser uploads directly to
+  // private Blob storage, so the ZIP never passes through the 4.5 MB Function limit.
+  app.post('/history/upload-target', requireAuthentication, (req, res) => {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      return res.status(503).json({ error: 'Falta conectar Vercel Blob y configurar BLOB_READ_WRITE_TOKEN.' });
+    }
+    const { randomUUID } = require('crypto');
+    const pathname = `history-import/${randomUUID()}.zip`;
+    req.session.historyUploadPath = pathname;
+    return req.session.save((error) => {
+      if (error) return res.status(500).json({ error: 'No se pudo preparar la subida.' });
+      return res.json({ pathname });
     });
+  });
+
+  // The token endpoint must also accept Blob's completion webhook, so authentication
+  // is enforced inside onBeforeGenerateToken (only the token-generation action).
+  app.post('/history/upload-token', async (req, res) => {
+    try {
+      const { handleUpload } = await import('@vercel/blob/client');
+      const jsonResponse = await handleUpload({
+        body: req.body,
+        request: req,
+        onBeforeGenerateToken: async (pathname) => {
+          if (typeof req.isAuthenticated !== 'function' || !req.isAuthenticated() || !req.user) {
+            throw new Error('No autorizado');
+          }
+          if (!req.session?.historyUploadPath || pathname !== req.session.historyUploadPath) {
+            throw new Error('La ruta de subida no es válida para esta sesión.');
+          }
+          return {
+            allowedContentTypes: ['application/zip', 'application/x-zip-compressed', 'application/octet-stream'],
+            addRandomSuffix: false
+          };
+        }
+      });
+      return res.json(jsonResponse);
+    } catch (error) {
+      const message = error.message || 'No se pudo autorizar la subida del ZIP.';
+      const status = message === 'No autorizado' ? 401 : 400;
+      return res.status(status).json({ error: message });
+    }
+  });
+
+  app.post('/history/import-blob', requireAuthentication, async (req, res) => {
+    const pathname = req.body?.pathname;
+    if (!pathname || !req.session?.historyUploadPath || pathname !== req.session.historyUploadPath) {
+      return res.status(403).json({ error: 'El archivo no pertenece a esta sesión o la subida ya expiró.' });
+    }
+
+    let result;
+    let status = 200;
+    try {
+      const { get, del } = await import('@vercel/blob');
+      const stored = await get(pathname, { access: 'private' });
+      if (!stored || stored.statusCode !== 200 || !stored.stream) {
+        status = 404;
+        throw new Error('No encontramos el ZIP subido. Intenta cargarlo otra vez.');
+      }
+      const maxBytes = 100 * 1024 * 1024;
+      if (stored.blob.size && stored.blob.size > maxBytes) {
+        status = 413;
+        throw new Error('El ZIP supera el límite de procesamiento de 100 MB.');
+      }
+      const chunks = [];
+      for await (const chunk of stored.stream) chunks.push(Buffer.from(chunk));
+      const buffer = Buffer.concat(chunks);
+      if (buffer.length > maxBytes) {
+        status = 413;
+        throw new Error('El ZIP supera el límite de procesamiento de 100 MB.');
+      }
+      const { processSpotifyHistoryZip } = require('./history-import');
+      result = processSpotifyHistoryZip(buffer);
+    } catch (error) {
+      status = status === 200 ? 422 : status;
+      result = { error: error.message || 'No se pudo procesar el historial.' };
+    } finally {
+      req.session.historyUploadPath = null;
+      try {
+        const { del } = await import('@vercel/blob');
+        await del(pathname, { access: 'private' });
+      } catch (error) {
+        console.error('No se pudo eliminar el ZIP temporal de Blob:', error.message);
+      }
+    }
+    return res.status(status).json(result);
   });
 
   app.get('/me', requireAuthentication, async (req, res) => {
