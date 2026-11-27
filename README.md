@@ -45,9 +45,11 @@ The dashboard now presents a visual listening snapshot with selectable 4-week, 6
 
 ## Importing your Spotify listening history
 
-Request your personal data export from Spotify and extract the downloaded archive. In the dashboard, choose one or more `Streaming_History_Audio_*.json` files. ZIP archives are not uploaded directly; extract them first.
+Request your personal data export from Spotify. In the dashboard, choose the complete Spotify Extended Streaming History ZIP. The browser uploads it directly to a **private Vercel Blob store**, then the authenticated server downloads and processes it. The ZIP is deleted from Blob storage after processing. The app accepts ZIP files up to 100 MB; larger archives may exceed the serverless processing memory or execution-time limits.
 
-The import is parsed in the browser and summarized locally. It does not send the exported listening history to this server. A compact aggregate is stored in the browser's local storage so it can be restored on the next visit. Clear this site's browser data to remove that local summary.
+For Vercel deployments, create a **Private** Blob store in the project's Storage section and connect it to this project. Enable **Add a read-write token env var to this connection** so `BLOB_READ_WRITE_TOKEN` is available to the upload-token route. The store must remain private because the export contains personal listening data. For local development, connect the store to the Development environment and pull the variables with the Vercel CLI.
+
+The processed aggregate is stored in the browser's local storage so it can be restored on the next visit. Clear this site's browser data to remove that local summary.
 
 The Song Time Machine reports the sum of Spotify's recorded `ms_played` values and the number of listening events present in the export. An event is not necessarily a Spotify-qualified stream. Entries without track metadata are skipped. Monthly charts use the timestamps contained in the export.
 
