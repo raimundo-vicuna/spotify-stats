@@ -68,12 +68,12 @@
 
           <section class="history-universe-section" id="history-import-section">
             <div class="history-section-head">
-              <div><span class="section-kicker">THE ARCHIVE / YOUR PERSONAL GALAXY</span><h2>Explore your listening universe</h2><p>Import Spotify Extended Streaming History to reveal the songs, artists and eras behind your listening life. Files are processed locally in your browser.</p></div>
+              <div><span class="section-kicker">THE ARCHIVE / YOUR PERSONAL GALAXY</span><h2>Explore your listening universe</h2><p>Import Spotify Extended Streaming History to reveal the songs, artists and eras behind your listening life. The complete ZIP is uploaded and processed by the server.</p></div>
               <button id="share-universe" class="share-discovery-button" type="button">✦ Share my universe</button>
             </div>
             <div class="history-import-row">
-              <label class="history-file-label" for="history-files">⇧ Import Spotify history<input id="history-files" type="file" accept=".json,application/json" multiple></label>
-              <span class="history-file-help">Select one or more extracted Streaming_History_Audio_*.json files from your Spotify data export. ZIP files must be extracted first.</span>
+              <label class="history-file-label" for="history-files">⇧ Upload Spotify history ZIP<input id="history-files" type="file" accept=".zip,application/zip"></label>
+              <span class="history-file-help">Upload your complete Spotify Extended Streaming History ZIP. The server finds every Streaming_History_Audio_*.json inside it.</span>
               <p id="history-import-status" role="status" aria-live="polite">No history imported yet. Your Spotify API dashboard still works without an import.</p>
             </div>
             <div class="history-stat-grid" aria-label="Imported history summary">
