@@ -52,6 +52,25 @@ function getRoutes(app) {
     return destroy();
   });
 
+  app.post('/history/import', requireAuthentication, (req, res, next) => {
+    const multer = require('multer');
+    const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024, files: 1 } }).single('historyZip');
+    upload(req, res, (error) => {
+      if (error) {
+        if (error.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'El ZIP supera el límite de 50 MB.' });
+        return next(error);
+      }
+      try {
+        if (!req.file) return res.status(400).json({ error: 'Sube el ZIP completo de Spotify.' });
+        if (!req.file.originalname.toLowerCase().endsWith('.zip')) return res.status(400).json({ error: 'El archivo debe ser un ZIP.' });
+        const { processSpotifyHistoryZip } = require('./history-import');
+        return res.json(processSpotifyHistoryZip(req.file.buffer));
+      } catch (error) {
+        return res.status(422).json({ error: error.message || 'No se pudo procesar el historial.' });
+      }
+    });
+  });
+
   app.get('/me', requireAuthentication, async (req, res) => {
     try { const r = await spotifyRequest(req, 'get', '/me'); return res.json(r.data); }
     catch (e) { return sendSpotifyError(res, e, 'Error al obtener el perfil del usuario.'); }
