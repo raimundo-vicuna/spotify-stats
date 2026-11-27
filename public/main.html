@@ -73,7 +73,7 @@
             </div>
             <div class="history-import-row">
               <label class="history-file-label" for="history-files">⇧ Upload Spotify history ZIP<input id="history-files" type="file" accept=".zip,application/zip"></label>
-              <span class="history-file-help">Upload your complete Spotify Extended Streaming History ZIP. The server finds every Streaming_History_Audio_*.json inside it.</span>
+              <span class="history-file-help">Upload your complete Spotify Extended Streaming History ZIP. It is sent directly to private Vercel Blob storage, then processed by the server.</span>
               <p id="history-import-status" role="status" aria-live="polite">No history imported yet. Your Spotify API dashboard still works without an import.</p>
             </div>
             <div class="history-stat-grid" aria-label="Imported history summary">
