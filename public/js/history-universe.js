@@ -285,7 +285,14 @@
     setStatus('Subiendo y procesando tu ZIP… no cierres esta pestaña.','info');
     try {
       const response=await fetch('/history/import',{method:'POST',body:formData});
-      const payload=await response.json();
+      const contentType=response.headers.get('content-type')||'';
+      let payload;
+      if(contentType.includes('application/json')){
+        payload=await response.json();
+      }else{
+        const raw=await response.text();
+        payload={error:raw.trim().slice(0,500)||'El servidor rechazó la subida del ZIP.'};
+      }
       if(!response.ok) throw new Error(payload.error||'No se pudo procesar el ZIP.');
       imported=payload;
       try{localStorage.setItem(STORAGE_KEY,JSON.stringify(imported));}catch{}
