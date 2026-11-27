@@ -27,6 +27,8 @@
     "passport": "^0.7.0",
     "passport-spotify": "^2.0.0",
     "path": "^0.12.7",
-    "querystring": "^0.2.1"
+    "querystring": "^0.2.1",
+    "adm-zip": "^0.5.16",
+    "multer": "^2.0.2"
   }
 }
